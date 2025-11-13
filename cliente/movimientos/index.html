@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Movimientos - Banco Virtual</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../shared/css/styles.css">
+    <link rel="stylesheet" href="../css/cliente.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #db8e5e;">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="../dashboard.html">
+                <i class="bi bi-bank2"></i> Banco Virtual
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../dashboard.html"><i class="bi bi-house-door"></i> Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#"><i class="bi bi-clock-history"></i> Movimientos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../perfil/index.html"><i class="bi bi-person"></i> Mi Perfil</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="cerrarSesion()">
+                            <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card shadow">
+                    <div class="card-header text-white d-flex justify-content-between align-items-center" style="background-color: #db8e5e;">
+                        <h4 class="mb-0"><i class="bi bi-clock-history"></i> Historial de Movimientos</h4>
+                        <span class="badge bg-light text-dark" id="totalMovimientos">0 movimientos</span>
+                    </div>
+                    <div class="card-body">
+                        <!-- Filtros -->
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Tipo de Transacción</label>
+                                <select class="form-select" id="filtroTipo">
+                                    <option value="">Todos los tipos</option>
+                                    <option value="deposito">Depósito</option>
+                                    <option value="retiro">Retiro</option>
+                                    <option value="transferencia">Transferencia</option>
+                                    <option value="pago_prestamo">Pago de Préstamo</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Fecha Desde</label>
+                                <input type="date" class="form-control" id="fechaDesde">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Fecha Hasta</label>
+                                <input type="date" class="form-control" id="fechaHasta">
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button class="btn btn-primary me-2" onclick="aplicarFiltros()">
+                                    <i class="bi bi-search"></i> Buscar
+                                </button>
+                                <button class="btn btn-secondary" onclick="limpiarFiltros()">
+                                    <i class="bi bi-x-circle"></i> Limpiar
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Tabla de movimientos -->
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Tipo</th>
+                                        <th>Descripción</th>
+                                        <th>Referencia</th>
+                                        <th class="text-end">Monto</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaMovimientos">
+                                    <tr>
+                                        <td colspan="6" class="text-center">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Cargando...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Paginación -->
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div>
+                                <small class="text-muted">Mostrando <span id="registrosMostrados">0</span> registros</small>
+                            </div>
+                            <nav>
+                                <ul class="pagination pagination-sm mb-0" id="paginacion">
+                                    <!-- Se llena dinámicamente -->
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../shared/js/api.js"></script>
+    <script src="../../shared/js/auth.js"></script>
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        let cuentaCliente = null;
+        let todasTransacciones = [];
+        let transaccionesFiltradas = [];
+        let paginaActual = 1;
+        const registrosPorPagina = 15;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!verificarAutenticacion()) {
+                window.location.href = '../../index.html';
+                return;
+            }
+
+            await cargarCuenta();
+            await cargarMovimientos();
+        });
+
+        async function cargarCuenta() {
+            try {
+                const response = await apiCall('/cuentas/mis-cuentas', { method: 'GET' });
+                
+                if (response.cuentas && response.cuentas.length > 0) {
+                    cuentaCliente = response.cuentas.find(c => c.estado === 'activa') || response.cuentas[0];
+                }
+            } catch (error) {
+                console.error('Error al cargar cuenta:', error);
+            }
+        }
+
+        async function cargarMovimientos() {
+            if (!cuentaCliente) {
+                document.getElementById('tablaMovimientos').innerHTML = `
+                    <tr><td colspan="6" class="text-center">No hay cuenta disponible</td></tr>
+                `;
+                return;
+            }
+
+            try {
+                const response = await apiCall(`/transacciones/cuenta/${cuentaCliente.id_cuenta}`, {
+                    method: 'GET'
+                });
+
+                todasTransacciones = response.transacciones || [];
+                transaccionesFiltradas = [...todasTransacciones];
+                
+                document.getElementById('totalMovimientos').textContent = `${todasTransacciones.length} movimientos`;
+                
+                mostrarTransacciones();
+            } catch (error) {
+                console.error('Error al cargar movimientos:', error);
+                document.getElementById('tablaMovimientos').innerHTML = `
+                    <tr><td colspan="6" class="text-center text-danger">Error al cargar movimientos</td></tr>
+                `;
+            }
+        }
+
+        function aplicarFiltros() {
+            const tipo = document.getElementById('filtroTipo').value;
+            const fechaDesde = document.getElementById('fechaDesde').value;
+            const fechaHasta = document.getElementById('fechaHasta').value;
+
+            transaccionesFiltradas = todasTransacciones.filter(trans => {
+                let cumple = true;
+
+                // Filtrar por tipo
+                if (tipo && trans.tipo_transaccion !== tipo) {
+                    cumple = false;
+                }
+
+                // Filtrar por fecha desde
+                if (fechaDesde) {
+                    const fechaTrans = new Date(trans.fecha_transaccion);
+                    const fechaMin = new Date(fechaDesde);
+                    if (fechaTrans < fechaMin) {
+                        cumple = false;
+                    }
+                }
+
+                // Filtrar por fecha hasta
+                if (fechaHasta) {
+                    const fechaTrans = new Date(trans.fecha_transaccion);
+                    const fechaMax = new Date(fechaHasta);
+                    fechaMax.setHours(23, 59, 59);
+                    if (fechaTrans > fechaMax) {
+                        cumple = false;
+                    }
+                }
+
+                return cumple;
+            });
+
+            paginaActual = 1;
+            mostrarTransacciones();
+        }
+
+        function limpiarFiltros() {
+            document.getElementById('filtroTipo').value = '';
+            document.getElementById('fechaDesde').value = '';
+            document.getElementById('fechaHasta').value = '';
+            
+            transaccionesFiltradas = [...todasTransacciones];
+            paginaActual = 1;
+            mostrarTransacciones();
+        }
+
+        function mostrarTransacciones() {
+            const inicio = (paginaActual - 1) * registrosPorPagina;
+            const fin = inicio + registrosPorPagina;
+            const transaccionesPagina = transaccionesFiltradas.slice(inicio, fin);
+
+            const tbody = document.getElementById('tablaMovimientos');
+
+            if (transaccionesPagina.length === 0) {
+                tbody.innerHTML = `
+                    <tr><td colspan="6" class="text-center text-muted">No hay transacciones registradas</td></tr>
+                `;
+                document.getElementById('registrosMostrados').textContent = '0';
+                document.getElementById('paginacion').innerHTML = '';
+                return;
+            }
+
+            tbody.innerHTML = transaccionesPagina.map(trans => {
+                const esCredito = trans.id_cuenta_destino === cuentaCliente.id_cuenta;
+                const claseMonto = esCredito ? 'text-success' : 'text-danger';
+                const signo = esCredito ? '+' : '-';
+                
+                return `
+                    <tr>
+                        <td>${formatearFecha(trans.fecha_transaccion)}</td>
+                        <td><span class="badge bg-secondary">${capitalizar(trans.tipo_transaccion.replace('_', ' '))}</span></td>
+                        <td>${trans.descripcion || '-'}</td>
+                        <td><small class="text-muted">${trans.codigo_transaccion || '-'}</small></td>
+                        <td class="text-end ${claseMonto}"><strong>${signo}${formatearMoneda(trans.monto)}</strong></td>
+                        <td><span class="badge bg-success">${capitalizar(trans.estado)}</span></td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('registrosMostrados').textContent = transaccionesFiltradas.length;
+            
+            generarPaginacion();
+        }
+
+        function generarPaginacion() {
+            const totalPaginas = Math.ceil(transaccionesFiltradas.length / registrosPorPagina);
+            const paginacionDiv = document.getElementById('paginacion');
+
+            if (totalPaginas <= 1) {
+                paginacionDiv.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+
+            // Botón anterior
+            html += `
+                <li class="page-item ${paginaActual === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="cambiarPagina(${paginaActual - 1}); return false;">Anterior</a>
+                </li>
+            `;
+
+            // Números de página
+            for (let i = 1; i <= totalPaginas; i++) {
+                if (i === 1 || i === totalPaginas || (i >= paginaActual - 2 && i <= paginaActual + 2)) {
+                    html += `
+                        <li class="page-item ${i === paginaActual ? 'active' : ''}">
+                            <a class="page-link" href="#" onclick="cambiarPagina(${i}); return false;">${i}</a>
+                        </li>
+                    `;
+                } else if (i === paginaActual - 3 || i === paginaActual + 3) {
+                    html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                }
+            }
+
+            // Botón siguiente
+            html += `
+                <li class="page-item ${paginaActual === totalPaginas ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="cambiarPagina(${paginaActual + 1}); return false;">Siguiente</a>
+                </li>
+            `;
+
+            paginacionDiv.innerHTML = html;
+        }
+
+        function cambiarPagina(pagina) {
+            const totalPaginas = Math.ceil(transaccionesFiltradas.length / registrosPorPagina);
+            
+            if (pagina < 1 || pagina > totalPaginas) {
+                return;
+            }
+
+            paginaActual = pagina;
+            mostrarTransacciones();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function cerrarSesion() {
+            if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+                logout();
+                window.location.href = '../../index.html';
+            }
+        }
+    </script>
+</body>
+</html>

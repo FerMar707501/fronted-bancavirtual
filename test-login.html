@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Login</title>
+</head>
+<body>
+    <h1>Test Login</h1>
+    <button onclick="testLogin()">Test Login Admin</button>
+    <div id="result"></div>
+
+    <script src="shared/js/api.js"></script>
+    <script src="shared/js/auth.js"></script>
+    <script>
+        async function testLogin() {
+            try {
+                document.getElementById('result').innerHTML = 'Probando login...';
+                await iniciarSesion('admin', 'Admin123!');
+            } catch (error) {
+                document.getElementById('result').innerHTML = 'Error: ' + error.message;
+                console.error('Error completo:', error);
+            }
+        }
+    </script>
+</body>
+</html>

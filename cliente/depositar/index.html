@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Depositar - Banco Virtual</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../shared/css/styles.css">
+    <link rel="stylesheet" href="../css/cliente.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #db8e5e;">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="../dashboard.html">
+                <i class="bi bi-bank2"></i> Banco Virtual
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../dashboard.html"><i class="bi bi-house-door"></i> Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#"><i class="bi bi-cash-coin"></i> Depositar</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../movimientos/index.html"><i class="bi bi-clock-history"></i> Movimientos</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="cerrarSesion()">
+                            <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header text-white" style="background-color: #db8e5e;">
+                        <h4 class="mb-0"><i class="bi bi-cash-coin"></i> Realizar Depósito</h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- Información de la cuenta -->
+                        <div class="alert alert-info">
+                            <h5><i class="bi bi-info-circle"></i> Tu Cuenta</h5>
+                            <p class="mb-1"><strong>Número de Cuenta:</strong> <span id="numeroCuenta">-</span></p>
+                            <p class="mb-1"><strong>Saldo Actual:</strong> <span id="saldoActual">Q 0.00</span></p>
+                        </div>
+
+                        <!-- Formulario de depósito -->
+                        <form id="formDeposito">
+                            <div class="mb-3">
+                                <label for="monto" class="form-label">Monto a Depositar <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">Q</span>
+                                    <input type="number" class="form-control" id="monto" name="monto" 
+                                           min="1" step="0.01" required placeholder="0.00">
+                                </div>
+                                <div class="form-text">Monto mínimo: Q 1.00</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="descripcion" class="form-label">Descripción (Opcional)</label>
+                                <textarea class="form-control" id="descripcion" name="descripcion" 
+                                          rows="3" placeholder="Ingresa una descripción del depósito"></textarea>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-success btn-lg" id="btnDepositar">
+                                    <i class="bi bi-check-circle"></i> Realizar Depósito
+                                </button>
+                                <a href="../dashboard.html" class="btn btn-secondary">
+                                    <i class="bi bi-arrow-left"></i> Volver
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación -->
+    <div class="modal fade" id="modalConfirmacion" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="bi bi-check-circle"></i> Depósito Exitoso</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <i class="bi bi-check-circle text-success" style="font-size: 4rem;"></i>
+                    <h4 class="mt-3">¡Depósito realizado con éxito!</h4>
+                    <p class="mb-1">Monto depositado: <strong id="montoDepositado">Q 0.00</strong></p>
+                    <p class="mb-0">Nuevo saldo: <strong id="nuevoSaldo">Q 0.00</strong></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="window.location.href='../dashboard.html'">
+                        Ir al Dashboard
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="location.reload()">
+                        Hacer otro depósito
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../shared/js/api.js"></script>
+    <script src="../../shared/js/auth.js"></script>
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        let cuentaCliente = null;
+        const modalConfirmacion = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!verificarAutenticacion()) {
+                window.location.href = '../../index.html';
+                return;
+            }
+
+            await cargarCuenta();
+
+            document.getElementById('formDeposito').addEventListener('submit', realizarDeposito);
+        });
+
+        async function cargarCuenta() {
+            try {
+                const response = await apiCall('/cuentas/mis-cuentas', { method: 'GET' });
+                
+                if (response.cuentas && response.cuentas.length > 0) {
+                    cuentaCliente = response.cuentas.find(c => c.estado === 'activa') || response.cuentas[0];
+                    document.getElementById('numeroCuenta').textContent = cuentaCliente.numero_cuenta;
+                    document.getElementById('saldoActual').textContent = formatearMoneda(cuentaCliente.saldo);
+                } else {
+                    mostrarAlerta('No tienes cuentas disponibles', 'danger');
+                }
+            } catch (error) {
+                console.error('Error al cargar cuenta:', error);
+                mostrarAlerta('Error al cargar la información de la cuenta', 'danger');
+            }
+        }
+
+        async function realizarDeposito(e) {
+            e.preventDefault();
+            
+            if (!cuentaCliente) {
+                mostrarAlerta('No hay cuenta disponible', 'danger');
+                return;
+            }
+
+            const monto = parseFloat(document.getElementById('monto').value);
+            const descripcion = document.getElementById('descripcion').value || 'Depósito en efectivo';
+
+            if (monto < 1) {
+                mostrarAlerta('El monto mínimo es Q 1.00', 'warning');
+                return;
+            }
+
+            const btnDepositar = document.getElementById('btnDepositar');
+            btnDepositar.disabled = true;
+            btnDepositar.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Procesando...';
+
+            try {
+                const response = await apiCall('/transacciones/deposito', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        id_cuenta_destino: cuentaCliente.id_cuenta,
+                        monto: monto,
+                        descripcion: descripcion
+                    })
+                });
+
+                // Actualizar saldo
+                cuentaCliente.saldo = parseFloat(cuentaCliente.saldo) + monto;
+                
+                // Mostrar modal de confirmación
+                document.getElementById('montoDepositado').textContent = formatearMoneda(monto);
+                document.getElementById('nuevoSaldo').textContent = formatearMoneda(cuentaCliente.saldo);
+                modalConfirmacion.show();
+
+                // Limpiar formulario
+                document.getElementById('formDeposito').reset();
+                document.getElementById('saldoActual').textContent = formatearMoneda(cuentaCliente.saldo);
+
+            } catch (error) {
+                console.error('Error al realizar depósito:', error);
+                mostrarAlerta('Error al realizar el depósito: ' + (error.message || 'Error desconocido'), 'danger');
+            } finally {
+                btnDepositar.disabled = false;
+                btnDepositar.innerHTML = '<i class="bi bi-check-circle"></i> Realizar Depósito';
+            }
+        }
+
+        function cerrarSesion() {
+            if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+                logout();
+                window.location.href = '../../index.html';
+            }
+        }
+
+        function mostrarAlerta(mensaje, tipo = 'info') {
+            const alerta = document.createElement('div');
+            alerta.className = `alert alert-${tipo} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+            alerta.style.zIndex = '9999';
+            alerta.innerHTML = `${mensaje}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+            document.body.appendChild(alerta);
+            setTimeout(() => alerta.remove(), 5000);
+        }
+    </script>
+</body>
+</html>

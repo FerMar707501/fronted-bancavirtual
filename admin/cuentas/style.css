@@ -1,0 +1,64 @@
+.card {
+    border: none;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.table th {
+    background-color: #db8e5e;
+    color: white;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.btn-primary {
+    background-color: #db8e5e;
+    border-color: #db8e5e;
+}
+
+.btn-primary:hover {
+    background-color: #c47d4f;
+    border-color: #c47d4f;
+}
+
+.bg-primary {
+    background-color: #db8e5e !important;
+}
+
+.text-primary {
+    color: #db8e5e !important;
+}
+
+.card.text-white h6 {
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.card.text-white h3 {
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.badge {
+    padding: 0.35em 0.65em;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.modal-header {
+    background-color: #db8e5e;
+    color: white;
+}
+
+.modal-header .btn-close {
+    filter: invert(1);
+}

@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transferencias - Sistema Bancario</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../shared/css/styles.css">
+    <style>
+        .transaction-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid #db8e5e;
+        }
+        .transaction-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .badge-deposito { background-color: #28a745; }
+        .badge-retiro { background-color: #dc3545; }
+        .badge-transferencia { background-color: #007bff; }
+        .stat-card {
+            background: linear-gradient(135deg, #db8e5e 0%, #c17a4d 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #db8e5e;">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="../dashboard.html">
+                <i class="bi bi-bank"></i> Sistema Bancario
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../dashboard.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../clientes/index.html">Clientes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../cuentas/index.html">Cuentas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../prestamos/index.html">Préstamos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="index.html">Transferencias</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-warning" href="#" onclick="logout()">
+                            <i class="bi bi-box-arrow-right"></i> Salir
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <h2><i class="bi bi-arrow-left-right"></i> Gestión de Transferencias</h2>
+                <hr>
+            </div>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <h6><i class="bi bi-arrow-down-circle"></i> Depósitos Hoy</h6>
+                    <h3 id="totalDepositosHoy">Q 0.00</h3>
+                    <small id="cantDepositosHoy">0 transacciones</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <h6><i class="bi bi-arrow-up-circle"></i> Retiros Hoy</h6>
+                    <h3 id="totalRetirosHoy">Q 0.00</h3>
+                    <small id="cantRetirosHoy">0 transacciones</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <h6><i class="bi bi-arrow-left-right"></i> Transferencias Hoy</h6>
+                    <h3 id="totalTransferenciasHoy">Q 0.00</h3>
+                    <small id="cantTransferenciasHoy">0 transacciones</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <h6><i class="bi bi-wallet2"></i> Total Movimientos</h6>
+                    <h3 id="totalMovimientos">Q 0.00</h3>
+                    <small id="cantMovimientos">0 transacciones</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="historial-tab" data-bs-toggle="tab" data-bs-target="#historial" type="button">
+                    <i class="bi bi-clock-history"></i> Historial
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="deposito-tab" data-bs-toggle="tab" data-bs-target="#deposito" type="button">
+                    <i class="bi bi-arrow-down-circle"></i> Depósito
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="retiro-tab" data-bs-toggle="tab" data-bs-target="#retiro" type="button">
+                    <i class="bi bi-arrow-up-circle"></i> Retiro
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="transferencia-tab" data-bs-toggle="tab" data-bs-target="#transferencia" type="button">
+                    <i class="bi bi-arrow-left-right"></i> Transferencia
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="myTabContent">
+            <!-- Historial -->
+            <div class="tab-pane fade show active" id="historial" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Historial de Transacciones</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Filtros -->
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <select class="form-select" id="filtroTipo">
+                                    <option value="">Todos los tipos</option>
+                                    <option value="DEPOSITO">Depósitos</option>
+                                    <option value="RETIRO">Retiros</option>
+                                    <option value="TRANSFERENCIA">Transferencias</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <input type="date" class="form-control" id="filtroFechaInicio" placeholder="Fecha inicio">
+                            </div>
+                            <div class="col-md-3">
+                                <input type="date" class="form-control" id="filtroFechaFin" placeholder="Fecha fin">
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary w-100" onclick="aplicarFiltros()">
+                                    <i class="bi bi-search"></i> Buscar
+                                </button>
+                            </div>
+                            <div class="col-md-1">
+                                <button class="btn btn-outline-secondary w-100" onclick="limpiarFiltros()" title="Limpiar filtros">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Lista de transacciones -->
+                        <div id="listaTransacciones"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Depósito -->
+            <div class="tab-pane fade" id="deposito" role="tabpanel">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-arrow-down-circle"></i> Realizar Depósito</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="formDeposito">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Número de Cuenta *</label>
+                                        <input type="text" class="form-control" id="depositoCuenta" required>
+                                        <div class="form-text">Ingrese el número de cuenta</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Monto *</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">Q</span>
+                                            <input type="number" class="form-control" id="depositoMonto" step="0.01" min="0.01" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Descripción</label>
+                                <textarea class="form-control" id="depositoDescripcion" rows="2"></textarea>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="bi bi-check-circle"></i> Realizar Depósito
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Retiro -->
+            <div class="tab-pane fade" id="retiro" role="tabpanel">
+                <div class="card">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0"><i class="bi bi-arrow-up-circle"></i> Realizar Retiro</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="formRetiro">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Número de Cuenta *</label>
+                                        <input type="text" class="form-control" id="retiroCuenta" required>
+                                        <div class="form-text">Ingrese el número de cuenta</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Monto *</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">Q</span>
+                                            <input type="number" class="form-control" id="retiroMonto" step="0.01" min="0.01" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Descripción</label>
+                                <textarea class="form-control" id="retiroDescripcion" rows="2"></textarea>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-danger btn-lg">
+                                    <i class="bi bi-check-circle"></i> Realizar Retiro
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transferencia -->
+            <div class="tab-pane fade" id="transferencia" role="tabpanel">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-arrow-left-right"></i> Realizar Transferencia</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="formTransferencia">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Cuenta Origen *</label>
+                                        <input type="text" class="form-control" id="transferenciaCuentaOrigen" required>
+                                        <div class="form-text">Número de cuenta origen</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Cuenta Destino *</label>
+                                        <input type="text" class="form-control" id="transferenciaCuentaDestino" required>
+                                        <div class="form-text">Número de cuenta destino</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Monto *</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">Q</span>
+                                            <input type="number" class="form-control" id="transferenciaMonto" step="0.01" min="0.01" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Descripción</label>
+                                <textarea class="form-control" id="transferenciaDescripcion" rows="2"></textarea>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-check-circle"></i> Realizar Transferencia
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../shared/js/auth.js"></script>
+    <script src="../../shared/js/api.js"></script>
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        verificarAutenticacion();
+
+        let transacciones = [];
+        let cuentasMap = {};
+
+        // Cargar datos iniciales
+        document.addEventListener('DOMContentLoaded', async () => {
+            await cargarTransacciones();
+            configurarFormularios();
+        });
+
+        async function cargarTransacciones() {
+            try {
+                const response = await getTransacciones();
+                transacciones = response;
+                calcularEstadisticas();
+                mostrarTransacciones(transacciones);
+            } catch (error) {
+                console.error('Error al cargar transacciones:', error);
+                showAlert('Error al cargar transacciones', 'danger');
+            }
+        }
+
+        function calcularEstadisticas() {
+            const hoy = new Date().toISOString().split('T')[0];
+            
+            let depositosHoy = 0, retirosHoy = 0, transferenciasHoy = 0;
+            let cantDepositosHoy = 0, cantRetirosHoy = 0, cantTransferenciasHoy = 0;
+            
+            transacciones.forEach(t => {
+                const fecha = t.fecha_transaccion.split('T')[0];
+                if (fecha === hoy) {
+                    const monto = parseFloat(t.monto);
+                    const tipo = t.tipoTransaccion?.codigo || '';
+                    
+                    if (tipo === 'DEPOSITO') {
+                        depositosHoy += monto;
+                        cantDepositosHoy++;
+                    } else if (tipo === 'RETIRO') {
+                        retirosHoy += monto;
+                        cantRetirosHoy++;
+                    } else if (tipo === 'TRANSFERENCIA') {
+                        transferenciasHoy += monto;
+                        cantTransferenciasHoy++;
+                    }
+                }
+            });
+
+            document.getElementById('totalDepositosHoy').textContent = `Q ${formatNumber(depositosHoy)}`;
+            document.getElementById('cantDepositosHoy').textContent = `${cantDepositosHoy} transacciones`;
+            
+            document.getElementById('totalRetirosHoy').textContent = `Q ${formatNumber(retirosHoy)}`;
+            document.getElementById('cantRetirosHoy').textContent = `${cantRetirosHoy} transacciones`;
+            
+            document.getElementById('totalTransferenciasHoy').textContent = `Q ${formatNumber(transferenciasHoy)}`;
+            document.getElementById('cantTransferenciasHoy').textContent = `${cantTransferenciasHoy} transacciones`;
+            
+            const total = depositosHoy + retirosHoy + transferenciasHoy;
+            const cantTotal = cantDepositosHoy + cantRetirosHoy + cantTransferenciasHoy;
+            document.getElementById('totalMovimientos').textContent = `Q ${formatNumber(total)}`;
+            document.getElementById('cantMovimientos').textContent = `${cantTotal} transacciones`;
+        }
+
+        function mostrarTransacciones(lista) {
+            const container = document.getElementById('listaTransacciones');
+            
+            if (lista.length === 0) {
+                container.innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> No hay transacciones registradas
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = lista.map(t => {
+                const tipo = t.tipoTransaccion?.codigo || '';
+                const badge = tipo === 'DEPOSITO' ? 'badge-deposito' : 
+                             tipo === 'RETIRO' ? 'badge-retiro' : 'badge-transferencia';
+                
+                const icon = tipo === 'DEPOSITO' ? 'arrow-down-circle' :
+                            tipo === 'RETIRO' ? 'arrow-up-circle' : 'arrow-left-right';
+                
+                const cuentaOrigen = t.cuentaOrigen?.numero_cuenta || 'N/A';
+                const cuentaDestino = t.cuentaDestino?.numero_cuenta || 'N/A';
+                const clienteOrigen = t.cuentaOrigen?.cliente ? 
+                    `${t.cuentaOrigen.cliente.primer_nombre} ${t.cuentaOrigen.cliente.primer_apellido}` : 'N/A';
+                const clienteDestino = t.cuentaDestino?.cliente ? 
+                    `${t.cuentaDestino.cliente.primer_nombre} ${t.cuentaDestino.cliente.primer_apellido}` : 'N/A';
+
+                return `
+                    <div class="transaction-card card mb-3">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-1 text-center">
+                                    <i class="bi bi-${icon} fs-2" style="color: #db8e5e;"></i>
+                                </div>
+                                <div class="col-md-2">
+                                    <span class="badge ${badge}">${t.tipoTransaccion?.nombre || tipo}</span>
+                                    <div class="small text-muted mt-1">
+                                        ${formatDateTime(t.fecha_transaccion)}
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    ${tipo === 'DEPOSITO' || tipo === 'RETIRO' ? `
+                                        <strong>${tipo === 'DEPOSITO' ? 'Destino' : 'Origen'}:</strong><br>
+                                        ${tipo === 'DEPOSITO' ? cuentaDestino : cuentaOrigen}<br>
+                                        <small class="text-muted">${tipo === 'DEPOSITO' ? clienteDestino : clienteOrigen}</small>
+                                    ` : `
+                                        <strong>Origen:</strong> ${cuentaOrigen}<br>
+                                        <strong>Destino:</strong> ${cuentaDestino}
+                                    `}
+                                </div>
+                                <div class="col-md-3">
+                                    <small class="text-muted">Descripción:</small><br>
+                                    ${t.descripcion || 'Sin descripción'}
+                                </div>
+                                <div class="col-md-2 text-end">
+                                    <h5 class="mb-0 ${tipo === 'RETIRO' ? 'text-danger' : 'text-success'}">
+                                        ${tipo === 'RETIRO' ? '-' : '+'}Q ${formatNumber(t.monto)}
+                                    </h5>
+                                </div>
+                                <div class="col-md-1 text-center">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="verDetalle(${t.id_transaccion})">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function aplicarFiltros() {
+            const tipo = document.getElementById('filtroTipo').value;
+            const fechaInicio = document.getElementById('filtroFechaInicio').value;
+            const fechaFin = document.getElementById('filtroFechaFin').value;
+
+            let filtradas = [...transacciones];
+            
+            console.log('Total transacciones:', transacciones.length);
+            console.log('Filtros aplicados:', { tipo, fechaInicio, fechaFin });
+
+            if (tipo && tipo !== '') {
+                filtradas = filtradas.filter(t => t.tipoTransaccion?.codigo === tipo);
+                console.log('Después de filtro tipo:', filtradas.length);
+            }
+
+            if (fechaInicio) {
+                const fechaInicioObj = new Date(fechaInicio + 'T00:00:00');
+                filtradas = filtradas.filter(t => {
+                    const fechaTransaccion = new Date(t.fecha_transaccion);
+                    return fechaTransaccion >= fechaInicioObj;
+                });
+                console.log('Después de filtro fecha inicio:', filtradas.length);
+            }
+
+            if (fechaFin) {
+                const fechaFinObj = new Date(fechaFin + 'T23:59:59');
+                filtradas = filtradas.filter(t => {
+                    const fechaTransaccion = new Date(t.fecha_transaccion);
+                    return fechaTransaccion <= fechaFinObj;
+                });
+                console.log('Después de filtro fecha fin:', filtradas.length);
+            }
+
+            console.log('Total filtradas:', filtradas.length);
+            mostrarTransacciones(filtradas);
+        }
+
+        function limpiarFiltros() {
+            document.getElementById('filtroTipo').value = '';
+            document.getElementById('filtroFechaInicio').value = '';
+            document.getElementById('filtroFechaFin').value = '';
+            mostrarTransacciones(transacciones);
+        }
+        }
+
+        function configurarFormularios() {
+            // Formulario de depósito
+            document.getElementById('formDeposito').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const numeroCuenta = document.getElementById('depositoCuenta').value;
+                const monto = parseFloat(document.getElementById('depositoMonto').value);
+                const descripcion = document.getElementById('depositoDescripcion').value;
+
+                if (monto <= 0) {
+                    showAlert('El monto debe ser mayor a 0', 'warning');
+                    return;
+                }
+
+                try {
+                    // Buscar cuenta por número
+                    const cuentas = await getCuentas();
+                    const cuenta = cuentas.find(c => c.numero_cuenta === numeroCuenta);
+                    
+                    if (!cuenta) {
+                        showAlert('Cuenta no encontrada', 'danger');
+                        return;
+                    }
+
+                    await realizarDeposito(cuenta.id_cuenta, monto, descripcion);
+                    showAlert('Depósito realizado exitosamente', 'success');
+                    document.getElementById('formDeposito').reset();
+                    await cargarTransacciones();
+                    // Cambiar a tab de historial
+                    document.getElementById('historial-tab').click();
+                } catch (error) {
+                    console.error('Error:', error);
+                    showAlert(error.message || 'Error al realizar depósito', 'danger');
+                }
+            });
+
+            // Formulario de retiro
+            document.getElementById('formRetiro').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const numeroCuenta = document.getElementById('retiroCuenta').value;
+                const monto = parseFloat(document.getElementById('retiroMonto').value);
+                const descripcion = document.getElementById('retiroDescripcion').value;
+
+                if (monto <= 0) {
+                    showAlert('El monto debe ser mayor a 0', 'warning');
+                    return;
+                }
+
+                try {
+                    const cuentas = await getCuentas();
+                    const cuenta = cuentas.find(c => c.numero_cuenta === numeroCuenta);
+                    
+                    if (!cuenta) {
+                        showAlert('Cuenta no encontrada', 'danger');
+                        return;
+                    }
+
+                    await realizarRetiro(cuenta.id_cuenta, monto, descripcion);
+                    showAlert('Retiro realizado exitosamente', 'success');
+                    document.getElementById('formRetiro').reset();
+                    await cargarTransacciones();
+                    document.getElementById('historial-tab').click();
+                } catch (error) {
+                    console.error('Error:', error);
+                    showAlert(error.message || 'Error al realizar retiro', 'danger');
+                }
+            });
+
+            // Formulario de transferencia
+            document.getElementById('formTransferencia').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const numeroCuentaOrigen = document.getElementById('transferenciaCuentaOrigen').value;
+                const numeroCuentaDestino = document.getElementById('transferenciaCuentaDestino').value;
+                const monto = parseFloat(document.getElementById('transferenciaMonto').value);
+                const descripcion = document.getElementById('transferenciaDescripcion').value;
+
+                if (monto <= 0) {
+                    showAlert('El monto debe ser mayor a 0', 'warning');
+                    return;
+                }
+
+                if (numeroCuentaOrigen === numeroCuentaDestino) {
+                    showAlert('Las cuentas origen y destino no pueden ser iguales', 'warning');
+                    return;
+                }
+
+                try {
+                    const cuentas = await getCuentas();
+                    const cuentaOrigen = cuentas.find(c => c.numero_cuenta === numeroCuentaOrigen);
+                    const cuentaDestino = cuentas.find(c => c.numero_cuenta === numeroCuentaDestino);
+                    
+                    if (!cuentaOrigen) {
+                        showAlert('Cuenta origen no encontrada', 'danger');
+                        return;
+                    }
+                    
+                    if (!cuentaDestino) {
+                        showAlert('Cuenta destino no encontrada', 'danger');
+                        return;
+                    }
+
+                    await realizarTransferencia(cuentaOrigen.id_cuenta, cuentaDestino.id_cuenta, monto, descripcion);
+                    showAlert('Transferencia realizada exitosamente', 'success');
+                    document.getElementById('formTransferencia').reset();
+                    await cargarTransacciones();
+                    document.getElementById('historial-tab').click();
+                } catch (error) {
+                    console.error('Error:', error);
+                    showAlert(error.message || 'Error al realizar transferencia', 'danger');
+                }
+            });
+        }
+
+        async function verDetalle(id) {
+            try {
+                const t = await getTransaccion(id);
+                const tipo = t.tipoTransaccion?.codigo || '';
+                
+                let detalleHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>ID:</strong> ${t.id_transaccion}</p>
+                            <p><strong>Tipo:</strong> ${t.tipoTransaccion?.nombre || tipo}</p>
+                            <p><strong>Monto:</strong> Q ${formatNumber(t.monto)}</p>
+                            <p><strong>Fecha:</strong> ${formatDateTime(t.fecha_transaccion)}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Estado:</strong> ${t.estado}</p>
+                            <p><strong>Usuario:</strong> ${t.usuario?.nombre_completo || 'N/A'}</p>
+                            <p><strong>Agencia:</strong> ${t.agencia?.nombre || 'N/A'}</p>
+                        </div>
+                    </div>
+                    ${tipo === 'DEPOSITO' || tipo === 'RETIRO' ? `
+                        <hr>
+                        <p><strong>Cuenta:</strong> ${tipo === 'DEPOSITO' ? t.cuentaDestino?.numero_cuenta : t.cuentaOrigen?.numero_cuenta}</p>
+                        <p><strong>Cliente:</strong> ${tipo === 'DEPOSITO' ? 
+                            (t.cuentaDestino?.cliente ? `${t.cuentaDestino.cliente.primer_nombre} ${t.cuentaDestino.cliente.primer_apellido}` : 'N/A') :
+                            (t.cuentaOrigen?.cliente ? `${t.cuentaOrigen.cliente.primer_nombre} ${t.cuentaOrigen.cliente.primer_apellido}` : 'N/A')
+                        }</p>
+                    ` : `
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Cuenta Origen</h6>
+                                <p><strong>Número:</strong> ${t.cuentaOrigen?.numero_cuenta || 'N/A'}</p>
+                                <p><strong>Cliente:</strong> ${t.cuentaOrigen?.cliente ? 
+                                    `${t.cuentaOrigen.cliente.primer_nombre} ${t.cuentaOrigen.cliente.primer_apellido}` : 'N/A'}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Cuenta Destino</h6>
+                                <p><strong>Número:</strong> ${t.cuentaDestino?.numero_cuenta || 'N/A'}</p>
+                                <p><strong>Cliente:</strong> ${t.cuentaDestino?.cliente ? 
+                                    `${t.cuentaDestino.cliente.primer_nombre} ${t.cuentaDestino.cliente.primer_apellido}` : 'N/A'}</p>
+                            </div>
+                        </div>
+                    `}
+                    <hr>
+                    <p><strong>Descripción:</strong> ${t.descripcion || 'Sin descripción'}</p>
+                `;
+
+                Swal.fire({
+                    title: 'Detalle de Transacción',
+                    html: detalleHTML,
+                    icon: 'info',
+                    confirmButtonColor: '#db8e5e'
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error al cargar detalle', 'danger');
+            }
+        }
+
+        function showAlert(message, type) {
+            Swal.fire({
+                text: message,
+                icon: type,
+                confirmButtonColor: '#db8e5e',
+                timer: 3000
+            });
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</body>
+</html>

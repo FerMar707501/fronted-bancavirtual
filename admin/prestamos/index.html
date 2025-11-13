@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Préstamos - Banco Virtual</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../shared/css/global.css">
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark admin-navbar fixed-top">
+        <div class="container-fluid">
+            <button class="btn btn-link text-white d-lg-none" id="sidebarToggle">
+                <i class="bi bi-list fs-4"></i>
+            </button>
+            <a class="navbar-brand" href="../dashboard.html">
+                <i class="bi bi-bank2 me-2"></i>Banco Virtual
+            </a>
+            <div class="ms-auto d-flex align-items-center">
+                <span class="text-white me-3">
+                    <i class="bi bi-person-circle me-1"></i>
+                    <span id="adminName">Administrador</span>
+                </span>
+                <button class="btn btn-outline-light btn-sm" onclick="cerrarSesion()">
+                    <i class="bi bi-box-arrow-right me-1"></i>Salir
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="d-flex" style="margin-top: 56px;">
+        <!-- Sidebar -->
+        <nav class="admin-sidebar" id="sidebar">
+            <ul class="nav flex-column py-3">
+                <li class="nav-item"><a class="nav-link" href="../dashboard.html"><i class="bi bi-speedometer2"></i>Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="../usuarios/index.html"><i class="bi bi-people"></i>Usuarios</a></li>
+                <li class="nav-item"><a class="nav-link" href="../clientes/index.html"><i class="bi bi-person-badge"></i>Clientes</a></li>
+                <li class="nav-item"><a class="nav-link" href="../cuentas/index.html"><i class="bi bi-credit-card"></i>Cuentas</a></li>
+                <li class="nav-item"><a class="nav-link active" href="index.html"><i class="bi bi-cash-coin"></i>Préstamos</a></li>
+                <li class="nav-item"><a class="nav-link" href="../transferencias/index.html"><i class="bi bi-arrow-left-right"></i>Transferencias</a></li>
+                <li class="nav-item"><a class="nav-link" href="../configuracion/index.html"><i class="bi bi-gear"></i>Configuración</a></li>
+                <li class="nav-item"><a class="nav-link" href="../permisos/index.html"><i class="bi bi-shield-lock"></i>Permisos</a></li>
+                <li class="nav-item"><a class="nav-link" href="../reportes/general.html"><i class="bi bi-file-earmark-bar-graph"></i>Reportes</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="admin-main-content flex-fill">
+            <div class="container-fluid">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="mb-0">Gestión de Préstamos</h2>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a href="../dashboard.html">Dashboard</a></li>
+                                <li class="breadcrumb-item active">Préstamos</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#modalSolicitud" onclick="abrirModalSolicitud()">
+                        <i class="bi bi-plus-circle me-2"></i>Nueva Solicitud
+                    </button>
+                </div>
+
+                <!-- Estadísticas -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="card card-custom">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="text-muted mb-1">Total Préstamos</h6>
+                                        <h3 class="mb-0" id="totalPrestamos">0</h3>
+                                    </div>
+                                    <div class="icon-circle bg-primary">
+                                        <i class="bi bi-cash-coin text-white"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card card-custom">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="text-muted mb-1">Pendientes</h6>
+                                        <h3 class="mb-0 text-warning" id="prestamosPendientes">0</h3>
+                                    </div>
+                                    <div class="icon-circle bg-warning">
+                                        <i class="bi bi-hourglass-split text-white"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card card-custom">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="text-muted mb-1">Activos</h6>
+                                        <h3 class="mb-0 text-success" id="prestamosActivos">0</h3>
+                                    </div>
+                                    <div class="icon-circle bg-success">
+                                        <i class="bi bi-check-circle text-white"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card card-custom">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="text-muted mb-1">Monto Total</h6>
+                                        <h3 class="mb-0 text-info" id="montoTotal">Q 0.00</h3>
+                                    </div>
+                                    <div class="icon-circle bg-info">
+                                        <i class="bi bi-wallet2 text-white"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtros -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <select class="form-select" id="filtroEstado">
+                                    <option value="">Todos los estados</option>
+                                    <option value="solicitado">Solicitado</option>
+                                    <option value="aprobado">Aprobado</option>
+                                    <option value="desembolsado">Desembolsado</option>
+                                    <option value="vigente">Vigente</option>
+                                    <option value="rechazado">Rechazado</option>
+                                    <option value="pagado">Pagado</option>
+                                    <option value="vencido">Vencido</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="filtroTipo">
+                                    <option value="">Todos los tipos</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select" id="filtroCliente">
+                                    <option value="">Todos los clientes</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-outline-secondary w-100" onclick="cargarPrestamos()">
+                                    <i class="bi bi-search me-1"></i>Buscar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla de Préstamos -->
+                <div class="card card-custom">
+                    <div class="card-header">
+                        <i class="bi bi-cash-coin me-2"></i>Lista de Préstamos
+                    </div>
+                    <div class="card-body">
+                        <div id="loadingPrestamos" class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p class="mt-2">Cargando préstamos...</p>
+                        </div>
+
+                        <div id="tablaPrestamos" style="display: none;">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Cliente</th>
+                                            <th>Tipo</th>
+                                            <th>Monto</th>
+                                            <th>Plazo</th>
+                                            <th>Tasa</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="prestamosBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Nueva Solicitud -->
+    <div class="modal fade" id="modalSolicitud" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: #db8e5e; color: white;">
+                    <h5 class="modal-title">Nueva Solicitud de Préstamo</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formSolicitud">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label">Cliente <span class="text-danger">*</span></label>
+                                <select class="form-select" id="id_cliente_sol" required>
+                                    <option value="">Seleccione un cliente</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Tipo de Préstamo <span class="text-danger">*</span></label>
+                                <select class="form-select" id="id_tipo_prestamo" required onchange="actualizarTasaInteres()">
+                                    <option value="">Seleccione tipo</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Cuenta de Desembolso <span class="text-danger">*</span></label>
+                                <select class="form-select" id="id_cuenta_desembolso" required>
+                                    <option value="">Primero seleccione cliente</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Monto Solicitado <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="monto_solicitado" min="100" step="0.01" required placeholder="10000.00">
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Plazo (meses) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="plazo_meses" min="1" max="360" required placeholder="12">
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Tasa de Interés Anual (%)</label>
+                                <input type="number" class="form-control" id="tasa_interes" step="0.01" readonly>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Frecuencia de Pago</label>
+                                <select class="form-select" id="frecuencia_pago">
+                                    <option value="mensual">Mensual</option>
+                                    <option value="quincenal">Quincenal</option>
+                                    <option value="semanal">Semanal</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-12">
+                                <label class="form-label">Propósito del Préstamo</label>
+                                <textarea class="form-control" id="proposito" rows="3" placeholder="Describe el propósito del préstamo..."></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary-custom" onclick="guardarSolicitud()">
+                        <i class="bi bi-save me-1"></i>Crear Solicitud
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Ver Detalle -->
+    <div class="modal fade" id="modalDetalle" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: #db8e5e; color: white;">
+                    <h5 class="modal-title">Detalle del Préstamo</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="detalleContent">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../shared/js/api.js"></script>
+    <script src="../../shared/js/auth.js"></script>
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        verificarAutenticacion('admin');
+        const user = getUsuarioActual();
+        if (user) document.getElementById('adminName').textContent = user.username;
+
+        document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('show');
+        });
+
+        let tiposPrestamo = [];
+
+        // Cargar datos iniciales
+        async function cargarDatosIniciales() {
+            try {
+                // Cargar tipos de préstamo
+                tiposPrestamo = await getTiposPrestamo();
+                const selectTipo = document.getElementById('id_tipo_prestamo');
+                const filtroTipo = document.getElementById('filtroTipo');
+                
+                tiposPrestamo.forEach(t => {
+                    selectTipo.innerHTML += `<option value="${t.id_tipo_prestamo}" data-tasa="${t.tasa_interes}">${t.nombre} - ${t.tasa_interes}%</option>`;
+                    filtroTipo.innerHTML += `<option value="${t.id_tipo_prestamo}">${t.nombre}</option>`;
+                });
+
+                // Cargar clientes
+                const clientes = await getClientes();
+                const selectCliente = document.getElementById('id_cliente_sol');
+                const filtroCliente = document.getElementById('filtroCliente');
+                
+                clientes.forEach(c => {
+                    const nombre = `${c.primer_nombre} ${c.primer_apellido} - ${c.dpi}`;
+                    selectCliente.innerHTML += `<option value="${c.id_cliente}">${nombre}</option>`;
+                    filtroCliente.innerHTML += `<option value="${c.id_cliente}">${nombre}</option>`;
+                });
+
+                // Evento para cargar cuentas del cliente
+                document.getElementById('id_cliente_sol').addEventListener('change', cargarCuentasCliente);
+
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function cargarCuentasCliente() {
+            const clienteId = document.getElementById('id_cliente_sol').value;
+            const selectCuenta = document.getElementById('id_cuenta_desembolso');
+            
+            selectCuenta.innerHTML = '<option value="">Cargando...</option>';
+            
+            if (!clienteId) {
+                selectCuenta.innerHTML = '<option value="">Primero seleccione cliente</option>';
+                return;
+            }
+
+            try {
+                const cuentas = await getCuentas({ id_cliente: clienteId });
+                selectCuenta.innerHTML = '<option value="">Seleccione cuenta</option>';
+                
+                cuentas.filter(c => c.estado === 'activa').forEach(c => {
+                    selectCuenta.innerHTML += `<option value="${c.id_cuenta}">${c.numero_cuenta} - ${c.tipoCuenta?.nombre} (${formatearMoneda(c.saldo)})</option>`;
+                });
+
+                if (cuentas.filter(c => c.estado === 'activa').length === 0) {
+                    selectCuenta.innerHTML = '<option value="">El cliente no tiene cuentas activas</option>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                selectCuenta.innerHTML = '<option value="">Error al cargar cuentas</option>';
+            }
+        }
+
+        function actualizarTasaInteres() {
+            const select = document.getElementById('id_tipo_prestamo');
+            const option = select.options[select.selectedIndex];
+            const tasa = option?.getAttribute('data-tasa') || '';
+            document.getElementById('tasa_interes').value = tasa;
+        }
+
+        // Cargar préstamos
+        async function cargarPrestamos() {
+            try {
+                document.getElementById('loadingPrestamos').style.display = 'block';
+                document.getElementById('tablaPrestamos').style.display = 'none';
+
+                const params = {};
+                const filtroEstado = document.getElementById('filtroEstado').value;
+                const filtroTipo = document.getElementById('filtroTipo').value;
+                const filtroCliente = document.getElementById('filtroCliente').value;
+
+                if (filtroEstado) params.estado = filtroEstado;
+                if (filtroTipo) params.tipo = filtroTipo;
+                if (filtroCliente) params.id_cliente = filtroCliente;
+
+                const prestamos = await getPrestamos(params);
+                const tbody = document.getElementById('prestamosBody');
+
+                // Calcular estadísticas
+                document.getElementById('totalPrestamos').textContent = prestamos.length;
+                document.getElementById('prestamosPendientes').textContent = prestamos.filter(p => p.estado === 'solicitado').length;
+                document.getElementById('prestamosActivos').textContent = prestamos.filter(p => p.estado === 'vigente' || p.estado === 'desembolsado').length;
+                
+                const montoTotal = prestamos.filter(p => ['vigente', 'desembolsado', 'aprobado'].includes(p.estado))
+                    .reduce((sum, p) => sum + parseFloat(p.monto_aprobado || p.monto_solicitado || 0), 0);
+                document.getElementById('montoTotal').textContent = formatearMoneda(montoTotal);
+
+                if (prestamos.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No se encontraron préstamos</td></tr>';
+                } else {
+                    tbody.innerHTML = prestamos.map(p => {
+                        const nombreCliente = p.cliente 
+                            ? `${p.cliente.primer_nombre} ${p.cliente.primer_apellido}`
+                            : 'N/A';
+                        
+                        return `
+                        <tr>
+                            <td><strong>#${p.id_prestamo}</strong></td>
+                            <td>${nombreCliente}</td>
+                            <td>${p.tipoPrestamo?.nombre || 'N/A'}</td>
+                            <td><strong class="text-primary">${formatearMoneda(p.monto_solicitado)}</strong></td>
+                            <td>${p.plazo_meses} meses</td>
+                            <td>${p.tasa_interes}%</td>
+                            <td>
+                                <span class="badge ${getBadgeEstadoPrestamo(p.estado)}">
+                                    ${capitalizar(p.estado)}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" onclick="verDetalle(${p.id_prestamo})" title="Ver detalle">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    ${p.estado === 'solicitado' ? `
+                                    <button class="btn btn-outline-success" onclick="aprobarPrestamo(${p.id_prestamo})" title="Aprobar">
+                                        <i class="bi bi-check-lg"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger" onclick="rechazarPrestamo(${p.id_prestamo})" title="Rechazar">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>` : ''}
+                                    ${p.estado === 'aprobado' ? `
+                                    <button class="btn btn-outline-info" onclick="desembolsarPrestamo(${p.id_prestamo})" title="Desembolsar">
+                                        <i class="bi bi-cash-stack"></i>
+                                    </button>` : ''}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    }).join('');
+                }
+
+                document.getElementById('loadingPrestamos').style.display = 'none';
+                document.getElementById('tablaPrestamos').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loadingPrestamos').innerHTML = 
+                    `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            }
+        }
+
+        function getBadgeEstadoPrestamo(estado) {
+            const badges = {
+                'solicitado': 'bg-warning',
+                'aprobado': 'bg-info',
+                'desembolsado': 'bg-success',
+                'vigente': 'bg-success',
+                'rechazado': 'bg-danger',
+                'pagado': 'bg-dark',
+                'vencido': 'bg-danger'
+            };
+            return badges[estado] || 'bg-secondary';
+        }
+
+        function abrirModalSolicitud() {
+            document.getElementById('formSolicitud').reset();
+            document.getElementById('id_cuenta_desembolso').innerHTML = '<option value="">Primero seleccione cliente</option>';
+        }
+
+        async function guardarSolicitud() {
+            try {
+                const form = document.getElementById('formSolicitud');
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+
+                const data = {
+                    id_cliente: parseInt(document.getElementById('id_cliente_sol').value),
+                    id_tipo_prestamo: parseInt(document.getElementById('id_tipo_prestamo').value),
+                    id_cuenta_desembolso: parseInt(document.getElementById('id_cuenta_desembolso').value),
+                    monto_solicitado: parseFloat(document.getElementById('monto_solicitado').value),
+                    plazo_meses: parseInt(document.getElementById('plazo_meses').value),
+                    tasa_interes: parseFloat(document.getElementById('tasa_interes').value),
+                    frecuencia_pago: document.getElementById('frecuencia_pago').value,
+                    proposito: document.getElementById('proposito').value
+                };
+
+                await solicitarPrestamo(data);
+                alert('✅ Solicitud de préstamo creada exitosamente');
+                
+                bootstrap.Modal.getInstance(document.getElementById('modalSolicitud')).hide();
+                cargarPrestamos();
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
+        }
+
+        async function verDetalle(id) {
+            try {
+                const modal = new bootstrap.Modal(document.getElementById('modalDetalle'));
+                modal.show();
+                
+                const prestamo = await getPrestamo(id);
+                const nombreCliente = `${prestamo.cliente.primer_nombre} ${prestamo.cliente.primer_apellido}`;
+                
+                document.getElementById('detalleContent').innerHTML = `
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <h6>Información del Préstamo</h6>
+                            <table class="table table-sm">
+                                <tr><td><strong>ID:</strong></td><td>#${prestamo.id_prestamo}</td></tr>
+                                <tr><td><strong>Tipo:</strong></td><td>${prestamo.tipoPrestamo?.nombre}</td></tr>
+                                <tr><td><strong>Monto Solicitado:</strong></td><td class="text-primary"><strong>${formatearMoneda(prestamo.monto_solicitado)}</strong></td></tr>
+                                <tr><td><strong>Plazo:</strong></td><td>${prestamo.plazo_meses} meses</td></tr>
+                                <tr><td><strong>Tasa:</strong></td><td>${prestamo.tasa_interes}%</td></tr>
+                                <tr><td><strong>Frecuencia:</strong></td><td>${capitalizar(prestamo.frecuencia_pago)}</td></tr>
+                                <tr><td><strong>Estado:</strong></td><td><span class="badge ${getBadgeEstadoPrestamo(prestamo.estado)}">${capitalizar(prestamo.estado)}</span></td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Información del Cliente</h6>
+                            <table class="table table-sm">
+                                <tr><td><strong>Nombre:</strong></td><td>${nombreCliente}</td></tr>
+                                <tr><td><strong>DPI:</strong></td><td>${prestamo.cliente.dpi}</td></tr>
+                                <tr><td><strong>Correo:</strong></td><td>${prestamo.cliente.correo}</td></tr>
+                                <tr><td><strong>Propósito:</strong></td><td>${prestamo.proposito || 'No especificado'}</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function aprobarPrestamo(id) {
+            const monto = prompt('Monto aprobado (dejar vacío para aprobar el monto solicitado):');
+            if (monto === null) return;
+
+            try {
+                await apiCall(`/prestamos/${id}/aprobar`, 'POST', { 
+                    monto_aprobado: monto ? parseFloat(monto) : null 
+                });
+                alert('✅ Préstamo aprobado exitosamente');
+                cargarPrestamos();
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
+        }
+
+        async function rechazarPrestamo(id) {
+            const motivo = prompt('Motivo del rechazo:');
+            if (!motivo) return;
+
+            try {
+                await apiCall(`/prestamos/${id}/rechazar`, 'POST', { motivo });
+                alert('✅ Préstamo rechazado');
+                cargarPrestamos();
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
+        }
+
+        async function desembolsarPrestamo(id) {
+            if (!confirm('¿Está seguro de desembolsar este préstamo? Se acreditará el monto en la cuenta del cliente.')) return;
+
+            try {
+                await apiCall(`/prestamos/${id}/desembolsar`, 'POST');
+                alert('✅ Préstamo desembolsado exitosamente');
+                cargarPrestamos();
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarDatosIniciales();
+            cargarPrestamos();
+        });
+    </script>
+</body>
+</html>

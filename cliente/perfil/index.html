@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil - Banco Virtual</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../shared/css/styles.css">
+    <link rel="stylesheet" href="../css/cliente.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #db8e5e;">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="../dashboard.html">
+                <i class="bi bi-bank2"></i> Banco Virtual
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../dashboard.html"><i class="bi bi-house-door"></i> Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../movimientos/index.html"><i class="bi bi-clock-history"></i> Movimientos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#"><i class="bi bi-person"></i> Mi Perfil</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="cerrarSesion()">
+                            <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Información Personal -->
+            <div class="col-md-6 mb-3">
+                <div class="card shadow">
+                    <div class="card-header text-white" style="background-color: #db8e5e;">
+                        <h5 class="mb-0"><i class="bi bi-person-circle"></i> Información Personal</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <div class="d-inline-flex align-items-center justify-content-center bg-light rounded-circle" 
+                                 style="width: 100px; height: 100px;">
+                                <i class="bi bi-person-fill" style="font-size: 3rem; color: #db8e5e;"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="text-muted small">Nombre Completo</label>
+                            <p class="fw-bold mb-0" id="nombreCompleto">-</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="text-muted small">Usuario</label>
+                            <p class="fw-bold mb-0" id="username">-</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="text-muted small">Correo Electrónico</label>
+                            <p class="fw-bold mb-0" id="correo">-</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="text-muted small">Rol</label>
+                            <p class="mb-0"><span class="badge bg-primary" id="rol">Cliente</span></p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="text-muted small">Estado</label>
+                            <p class="mb-0"><span class="badge bg-success" id="estado">Activo</span></p>
+                        </div>
+                        
+                        <div class="mb-0">
+                            <label class="text-muted small">Último Acceso</label>
+                            <p class="fw-bold mb-0" id="ultimoAcceso">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cambiar Contraseña -->
+            <div class="col-md-6 mb-3">
+                <div class="card shadow">
+                    <div class="card-header text-white" style="background-color: #db8e5e;">
+                        <h5 class="mb-0"><i class="bi bi-shield-lock"></i> Cambiar Contraseña</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="formCambiarPassword">
+                            <div class="mb-3">
+                                <label for="passwordActual" class="form-label">Contraseña Actual <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" id="passwordActual" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="passwordNueva" class="form-label">Nueva Contraseña <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" id="passwordNueva" required minlength="6">
+                                <div class="form-text">Mínimo 6 caracteres</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="passwordConfirmar" class="form-label">Confirmar Nueva Contraseña <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" id="passwordConfirmar" required>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary" id="btnCambiarPassword">
+                                    <i class="bi bi-key"></i> Cambiar Contraseña
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Mis Cuentas -->
+                <div class="card shadow mt-3">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-credit-card"></i> Mis Cuentas</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="misCuentas">
+                            <div class="text-center py-2">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../shared/js/api.js"></script>
+    <script src="../../shared/js/auth.js"></script>
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        let usuario = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!verificarAutenticacion()) {
+                window.location.href = '../../index.html';
+                return;
+            }
+
+            usuario = obtenerUsuarioActual();
+            if (!usuario || usuario.rol?.codigo !== 'CLIENTE') {
+                alert('Acceso no autorizado');
+                window.location.href = '../../index.html';
+                return;
+            }
+
+            cargarDatosUsuario();
+            await cargarCuentas();
+
+            document.getElementById('formCambiarPassword').addEventListener('submit', cambiarPassword);
+        });
+
+        function cargarDatosUsuario() {
+            document.getElementById('nombreCompleto').textContent = usuario.nombre_completo || '-';
+            document.getElementById('username').textContent = usuario.username || '-';
+            document.getElementById('correo').textContent = usuario.correo || '-';
+            document.getElementById('rol').textContent = capitalizar(usuario.rol?.nombre || 'Cliente');
+            
+            const estadoBadge = document.getElementById('estado');
+            estadoBadge.textContent = capitalizar(usuario.estado);
+            estadoBadge.className = `badge ${usuario.estado === 'activo' ? 'bg-success' : 'bg-danger'}`;
+            
+            if (usuario.ultimo_acceso) {
+                document.getElementById('ultimoAcceso').textContent = formatearFecha(usuario.ultimo_acceso);
+            }
+        }
+
+        async function cargarCuentas() {
+            try {
+                const response = await apiCall('/cuentas/mis-cuentas', { method: 'GET' });
+                
+                if (response.cuentas && response.cuentas.length > 0) {
+                    const html = response.cuentas.map(cuenta => `
+                        <div class="card mb-2">
+                            <div class="card-body p-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>${cuenta.numero_cuenta}</strong>
+                                        <br>
+                                        <small class="text-muted">${cuenta.tipo_cuenta?.nombre || 'N/A'}</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <strong class="text-primary">${formatearMoneda(cuenta.saldo)}</strong>
+                                        <br>
+                                        <span class="badge ${cuenta.estado === 'activa' ? 'bg-success' : 'bg-warning'} badge-sm">
+                                            ${capitalizar(cuenta.estado)}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    document.getElementById('misCuentas').innerHTML = html;
+                } else {
+                    document.getElementById('misCuentas').innerHTML = `
+                        <div class="alert alert-info mb-0 small">
+                            <i class="bi bi-info-circle"></i> No tienes cuentas registradas
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error al cargar cuentas:', error);
+                document.getElementById('misCuentas').innerHTML = `
+                    <div class="alert alert-danger mb-0 small">Error al cargar cuentas</div>
+                `;
+            }
+        }
+
+        async function cambiarPassword(e) {
+            e.preventDefault();
+            
+            const passwordActual = document.getElementById('passwordActual').value;
+            const passwordNueva = document.getElementById('passwordNueva').value;
+            const passwordConfirmar = document.getElementById('passwordConfirmar').value;
+
+            if (passwordNueva !== passwordConfirmar) {
+                mostrarAlerta('Las contraseñas no coinciden', 'warning');
+                return;
+            }
+
+            if (passwordNueva.length < 6) {
+                mostrarAlerta('La contraseña debe tener al menos 6 caracteres', 'warning');
+                return;
+            }
+
+            const btnCambiar = document.getElementById('btnCambiarPassword');
+            btnCambiar.disabled = true;
+            btnCambiar.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Cambiando...';
+
+            try {
+                await apiCall('/usuarios/cambiar-password', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        passwordActual: passwordActual,
+                        passwordNueva: passwordNueva
+                    })
+                });
+
+                mostrarAlerta('Contraseña cambiada exitosamente', 'success');
+                document.getElementById('formCambiarPassword').reset();
+            } catch (error) {
+                console.error('Error al cambiar contraseña:', error);
+                mostrarAlerta(error.message || 'Error al cambiar la contraseña', 'danger');
+            } finally {
+                btnCambiar.disabled = false;
+                btnCambiar.innerHTML = '<i class="bi bi-key"></i> Cambiar Contraseña';
+            }
+        }
+
+        function cerrarSesion() {
+            if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+                logout();
+                window.location.href = '../../index.html';
+            }
+        }
+
+        function mostrarAlerta(mensaje, tipo = 'info') {
+            const alerta = document.createElement('div');
+            alerta.className = `alert alert-${tipo} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+            alerta.style.zIndex = '9999';
+            alerta.innerHTML = `${mensaje}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+            document.body.appendChild(alerta);
+            setTimeout(() => alerta.remove(), 5000);
+        }
+    </script>
+</body>
+</html>
