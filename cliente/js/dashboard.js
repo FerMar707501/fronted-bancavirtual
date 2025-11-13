@@ -33,13 +33,16 @@ async function cargarCuentaCliente() {
         // Obtener las cuentas del cliente
         const response = await apiCall('/cuentas/mis-cuentas', 'GET');
 
-        if (response && response.cuentas && response.cuentas.length > 0) {
+        // La respuesta puede ser un array directamente o estar en response.cuentas
+        const cuentasData = Array.isArray(response) ? response : (response.cuentas || []);
+
+        if (cuentasData.length > 0) {
             // Tomar la primera cuenta activa
-            cuentaCliente = response.cuentas.find(c => c.estado === 'activa') || response.cuentas[0];
+            cuentaCliente = cuentasData.find(c => c.estado === 'activa') || cuentasData[0];
             
             // Mostrar información de la cuenta
             document.getElementById('numeroCuenta').textContent = cuentaCliente.numero_cuenta;
-            document.getElementById('tipoCuenta').textContent = cuentaCliente.tipo_cuenta?.nombre || 'N/A';
+            document.getElementById('tipoCuenta').textContent = cuentaCliente.tipoCuenta?.nombre || 'N/A';
             document.getElementById('saldoDisponible').textContent = formatearMoneda(cuentaCliente.saldo);
             
             const estadoBadge = document.getElementById('estadoCuenta');
@@ -64,27 +67,33 @@ async function cargarCuentaCliente() {
 
 async function cargarPrestamos() {
     try {
-        const response = await apiCall('/prestamos', 'GET');
+        const response = await apiCall('/prestamos/mis-prestamos', 'GET');
 
-        if (response && response.prestamos && response.prestamos.length > 0) {
+        // La respuesta puede ser un array directamente o estar en response.prestamos
+        const prestamosData = Array.isArray(response) ? response : (response.prestamos || []);
+
+        if (prestamosData.length > 0) {
             document.getElementById('seccionPrestamos').style.display = 'block';
             
-            const prestamosActivos = response.prestamos.filter(p => p.estado === 'activo');
+            const prestamosActivos = prestamosData.filter(p => p.estado === 'vigente' || p.estado === 'activo');
             
             if (prestamosActivos.length > 0) {
                 let html = '<div class="row">';
                 
                 prestamosActivos.forEach(prestamo => {
-                    const porcentajePagado = (prestamo.monto_pagado / prestamo.monto_total) * 100;
+                    const montoAprobado = parseFloat(prestamo.monto_aprobado || 0);
+                    const saldoPendiente = parseFloat(prestamo.saldo_pendiente || 0);
+                    const montoPagado = montoAprobado - saldoPendiente;
+                    const porcentajePagado = montoAprobado > 0 ? (montoPagado / montoAprobado) * 100 : 0;
                     
                     html += `
                         <div class="col-md-6 mb-3">
                             <div class="card">
                                 <div class="card-body">
-                                    <h6 class="card-title">Préstamo ${prestamo.codigo_prestamo}</h6>
-                                    <p class="mb-1"><strong>Monto Total:</strong> ${formatearMoneda(prestamo.monto_total)}</p>
-                                    <p class="mb-1"><strong>Monto Pagado:</strong> ${formatearMoneda(prestamo.monto_pagado)}</p>
-                                    <p class="mb-2"><strong>Saldo Pendiente:</strong> ${formatearMoneda(prestamo.monto_total - prestamo.monto_pagado)}</p>
+                                    <h6 class="card-title">Préstamo ${prestamo.numero_prestamo}</h6>
+                                    <p class="mb-1"><strong>Monto Total:</strong> ${formatearMoneda(montoAprobado)}</p>
+                                    <p class="mb-1"><strong>Monto Pagado:</strong> ${formatearMoneda(montoPagado)}</p>
+                                    <p class="mb-2"><strong>Saldo Pendiente:</strong> ${formatearMoneda(saldoPendiente)}</p>
                                     <div class="progress mb-2">
                                         <div class="progress-bar" role="progressbar" style="width: ${porcentajePagado}%" 
                                              aria-valuenow="${porcentajePagado}" aria-valuemin="0" aria-valuemax="100">
@@ -128,20 +137,24 @@ async function cargarUltimosMovimientos() {
             return;
         }
 
-        const response = await apiCall(`/transacciones/cuenta/${cuentaCliente.id_cuenta}?limite=5`, 'GET');
+        const response = await apiCall(`/transacciones/cuenta/${cuentaCliente.id_cuenta}`, 'GET');
 
         const tbody = document.getElementById('tablaMovimientos');
         
-        if (response.transacciones && response.transacciones.length > 0) {
-            tbody.innerHTML = response.transacciones.map(trans => {
+        // Manejar respuesta que puede ser array directamente o { transacciones: [] }
+        const transacciones = Array.isArray(response) ? response : (response.transacciones || []);
+        
+        if (transacciones && transacciones.length > 0) {
+            tbody.innerHTML = transacciones.slice(0, 5).map(trans => {
                 const esCredito = trans.id_cuenta_destino === cuentaCliente.id_cuenta;
                 const claseMonto = esCredito ? 'text-success' : 'text-danger';
                 const signo = esCredito ? '+' : '-';
+                const tipoNombre = trans.tipoTransaccion?.nombre || 'Transacción';
                 
                 return `
                     <tr>
                         <td>${formatearFecha(trans.fecha_transaccion)}</td>
-                        <td><span class="badge bg-secondary">${capitalizar(trans.tipo_transaccion)}</span></td>
+                        <td><span class="badge bg-secondary">${tipoNombre}</span></td>
                         <td>${trans.descripcion || '-'}</td>
                         <td class="text-end ${claseMonto}"><strong>${signo}${formatearMoneda(trans.monto)}</strong></td>
                     </tr>

@@ -140,8 +140,11 @@
             try {
                 const response = await apiCall('/cuentas/mis-cuentas', 'GET');
                 
-                if (response.cuentas && response.cuentas.length > 0) {
-                    cuentaCliente = response.cuentas.find(c => c.estado === 'activa') || response.cuentas[0];
+                // La respuesta puede ser un array directamente o estar en response.cuentas
+                const cuentasData = Array.isArray(response) ? response : (response.cuentas || []);
+                
+                if (cuentasData.length > 0) {
+                    cuentaCliente = cuentasData.find(c => c.estado === 'activa') || cuentasData[0];
                     document.getElementById('numeroCuenta').textContent = cuentaCliente.numero_cuenta;
                     document.getElementById('saldoActual').textContent = formatearMoneda(cuentaCliente.saldo);
                 } else {

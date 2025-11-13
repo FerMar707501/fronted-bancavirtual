@@ -316,6 +316,10 @@ async function getTipoCuenta(id) {
 
 // ==================== PRESTAMOS ====================
 
+async function getMisPrestamos() {
+    return await apiCall('/prestamos/mis-prestamos');
+}
+
 async function getPrestamos(params = {}) {
     const query = new URLSearchParams(params).toString();
     return await apiCall(`/prestamos${query ? '?' + query : ''}`);

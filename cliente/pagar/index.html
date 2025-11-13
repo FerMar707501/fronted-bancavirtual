@@ -234,7 +234,9 @@
             try {
                 const response = await apiCall('/prestamos/mis-prestamos', 'GET');
                 
-                prestamos = response.prestamos?.filter(p => p.estado === 'activo') || [];
+                // La respuesta puede ser un array directamente o estar en response.prestamos
+                const prestamosData = Array.isArray(response) ? response : (response.prestamos || []);
+                prestamos = prestamosData.filter(p => p.estado === 'vigente' || p.estado === 'activo');
                 
                 if (prestamos.length > 0) {
                     mostrarListaPrestamos();
@@ -265,13 +267,13 @@
 
         function mostrarListaPrestamos() {
             const html = prestamos.map(prestamo => {
-                const saldoPendiente = prestamo.monto_total - prestamo.monto_pagado;
+                const saldoPendiente = parseFloat(prestamo.saldo_pendiente || 0);
                 return `
                     <div class="card mb-2 prestamo-item ${prestamoSeleccionado?.id_prestamo === prestamo.id_prestamo ? 'border-primary' : ''}" 
                          onclick="seleccionarPrestamo(${JSON.stringify(prestamo).replace(/"/g, '&quot;')})" 
                          style="cursor: pointer;">
                         <div class="card-body p-2">
-                            <h6 class="mb-1">${prestamo.codigo_prestamo}</h6>
+                            <h6 class="mb-1">${prestamo.numero_prestamo}</h6>
                             <small class="text-muted">Pendiente: ${formatearMoneda(saldoPendiente)}</small>
                         </div>
                     </div>
@@ -284,19 +286,21 @@
         function seleccionarPrestamo(prestamo) {
             prestamoSeleccionado = prestamo;
             
-            // Actualizar UI
-            document.getElementById('codigoPrestamo').textContent = prestamo.codigo_prestamo;
-            document.getElementById('montoTotal').textContent = formatearMoneda(prestamo.monto_total);
-            document.getElementById('montoPagado').textContent = formatearMoneda(prestamo.monto_pagado);
+            const montoAprobado = parseFloat(prestamo.monto_aprobado || 0);
+            const saldoPendiente = parseFloat(prestamo.saldo_pendiente || 0);
+            const montoPagado = montoAprobado - saldoPendiente;
             
-            const saldoPendiente = prestamo.monto_total - prestamo.monto_pagado;
+            // Actualizar UI
+            document.getElementById('codigoPrestamo').textContent = prestamo.numero_prestamo;
+            document.getElementById('montoTotal').textContent = formatearMoneda(montoAprobado);
+            document.getElementById('montoPagado').textContent = formatearMoneda(montoPagado);
             document.getElementById('saldoPendiente').textContent = formatearMoneda(saldoPendiente);
             document.getElementById('pendienteInfo').textContent = formatearMoneda(saldoPendiente);
             
-            document.getElementById('tasaInteres').textContent = prestamo.tipo_prestamo?.tasa_interes + '%' || '0%';
+            document.getElementById('tasaInteres').textContent = (prestamo.tasa_interes || prestamo.tipoPrestamo?.tasa_interes_anual || 0) + '%';
             document.getElementById('estadoPrestamo').textContent = capitalizar(prestamo.estado);
             
-            const porcentajePagado = (prestamo.monto_pagado / prestamo.monto_total) * 100;
+            const porcentajePagado = montoAprobado > 0 ? (montoPagado / montoAprobado) * 100 : 0;
             const progressBar = document.getElementById('progresoPago');
             progressBar.style.width = porcentajePagado + '%';
             progressBar.textContent = porcentajePagado.toFixed(1) + '%';
@@ -309,15 +313,8 @@
 
         function pagarCompleto() {
             if (prestamoSeleccionado) {
-                const saldoPendiente = prestamoSeleccionado.monto_total - prestamoSeleccionado.monto_pagado;
+                const saldoPendiente = parseFloat(prestamoSeleccionado.saldo_pendiente || 0);
                 document.getElementById('montoPago').value = saldoPendiente.toFixed(2);
-            }
-        }
-
-        function pagarMitad() {
-            if (prestamoSeleccionado) {
-                const saldoPendiente = prestamoSeleccionado.monto_total - prestamoSeleccionado.monto_pagado;
-                document.getElementById('montoPago').value = (saldoPendiente / 2).toFixed(2);
             }
         }
 
@@ -330,8 +327,8 @@
             }
 
             const montoPago = parseFloat(document.getElementById('montoPago').value);
-            const descripcion = document.getElementById('descripcionPago').value || `Pago de préstamo ${prestamoSeleccionado.codigo_prestamo}`;
-            const saldoPendiente = prestamoSeleccionado.monto_total - prestamoSeleccionado.monto_pagado;
+            const descripcion = document.getElementById('descripcionPago').value || `Pago de préstamo ${prestamoSeleccionado.numero_prestamo}`;
+            const saldoPendiente = parseFloat(prestamoSeleccionado.saldo_pendiente || 0);
 
             if (montoPago < 1) {
                 mostrarAlerta('El monto mínimo es Q 1.00', 'warning');
@@ -348,7 +345,7 @@
                 return;
             }
 
-            if (!confirm(`¿Confirmar pago de ${formatearMoneda(montoPago)} al préstamo ${prestamoSeleccionado.codigo_prestamo}?`)) {
+            if (!confirm(`¿Confirmar pago de ${formatearMoneda(montoPago)} al préstamo ${prestamoSeleccionado.numero_prestamo}?`)) {
                 return;
             }
 
@@ -357,19 +354,15 @@
             btnPagar.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Procesando...';
 
             try {
-                const response = await apiCall(`/prestamos/${prestamoSeleccionado.id_prestamo}/pagar`, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        monto: montoPago,
-                        descripcion: descripcion
-                    })
+                const response = await apiCall(`/prestamos/${prestamoSeleccionado.id_prestamo}/pagar`, 'POST', {
+                    monto: montoPago,
+                    descripcion: descripcion
                 });
 
                 // Actualizar datos locales
-                prestamoSeleccionado.monto_pagado = parseFloat(prestamoSeleccionado.monto_pagado) + montoPago;
+                const nuevoSaldoPendiente = saldoPendiente - montoPago;
+                prestamoSeleccionado.saldo_pendiente = nuevoSaldoPendiente;
                 cuentaCliente.saldo = parseFloat(cuentaCliente.saldo) - montoPago;
-                
-                const nuevoSaldoPendiente = prestamoSeleccionado.monto_total - prestamoSeleccionado.monto_pagado;
                 
                 // Mostrar modal
                 document.getElementById('montoPagadoModal').textContent = formatearMoneda(montoPago);
