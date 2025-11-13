@@ -110,9 +110,10 @@
             </form>
 
             <div style="margin-top: 1.5rem; text-align: center; color: #64748b; font-size: 0.875rem;">
-                <p>Credenciales de prueba:</p>
+                <p><small>💡 Credenciales de prueba:</small></p>
                 <p><strong>Admin:</strong> admin / Admin123!</p>
                 <p><strong>Cliente:</strong> juan.perez / Cliente123!</p>
+                <p><small>(También puedes usar el correo como usuario)</small></p>
             </div>
         </div>
     </div>
@@ -126,7 +127,8 @@
         // Verificar si ya está autenticado
         if (estaAutenticado()) {
             const role = getRolUsuario();
-            if (role === 'admin') {
+            const rolesAdmin = ['admin', 'gerente', 'cajero', 'analista'];
+            if (rolesAdmin.includes(role)) {
                 window.location.href = 'admin/dashboard.html';
             } else if (role === 'cliente') {
                 window.location.href = 'cliente/dashboard.html';

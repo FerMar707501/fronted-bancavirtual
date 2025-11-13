@@ -34,14 +34,33 @@ async function apiCall(endpoint, method = 'GET', data = null) {
     
     try {
         const response = await fetch(`${API_URL}${endpoint}`, options);
-        const result = await response.json();
         
-        // Si el token expiró o es inválido
+        // Si el token expiró o es inválido (401/403), manejar apropiadamente
         if (response.status === 401 || response.status === 403) {
-            localStorage.clear();
-            window.location.href = '/index.html';
-            return;
+            const result = await response.json();
+            // Solo limpiar y redirigir si es un problema de token/autenticación
+            if (result.message && (
+                result.message.includes('Token') || 
+                result.message.includes('token') ||
+                result.message.includes('autenticación') ||
+                result.message.includes('autenticacion') ||
+                result.message.includes('sesión') ||
+                result.message.includes('sesion')
+            )) {
+                localStorage.clear();
+                const path = window.location.pathname;
+                if (path.includes('/admin/') || path.includes('/cliente/')) {
+                    window.location.href = '../index.html';
+                } else {
+                    window.location.href = 'index.html';
+                }
+                return;
+            }
+            // Si no es problema de token, propagar el error normal
+            throw new Error(result.message || 'No autorizado');
         }
+        
+        const result = await response.json();
         
         // Si hay error del servidor
         if (!response.ok) {
@@ -397,3 +416,8 @@ async function getEstadoCuenta(id_cuenta, fecha_inicio, fecha_fin) {
     const params = new URLSearchParams({ fecha_inicio, fecha_fin }).toString();
     return await apiCall(`/reportes/estado-cuenta/${id_cuenta}?${params}`);
 }
+
+// ========================================
+// Exportar funciones al scope global
+// ========================================
+window.apiCall = apiCall;

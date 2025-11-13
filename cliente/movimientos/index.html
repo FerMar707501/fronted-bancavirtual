@@ -33,7 +33,7 @@
                 </ul>
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="cerrarSesion()">
+                        <a class="nav-link" href="#" onclick="event.preventDefault(); confirmarCerrarSesion();">
                             <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
                         </a>
                     </li>
@@ -127,6 +127,7 @@
     <script src="../../shared/js/api.js"></script>
     <script src="../../shared/js/auth.js"></script>
     <script src="../../shared/js/utils.js"></script>
+    <script src="../js/logout.js"></script>
     <script>
         let cuentaCliente = null;
         let todasTransacciones = [];
@@ -146,7 +147,7 @@
 
         async function cargarCuenta() {
             try {
-                const response = await apiCall('/cuentas/mis-cuentas', { method: 'GET' });
+                const response = await apiCall('/cuentas/mis-cuentas', 'GET');
                 
                 if (response.cuentas && response.cuentas.length > 0) {
                     cuentaCliente = response.cuentas.find(c => c.estado === 'activa') || response.cuentas[0];
@@ -321,13 +322,6 @@
             paginaActual = pagina;
             mostrarTransacciones();
             window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function cerrarSesion() {
-            if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
-                logout();
-                window.location.href = '../../index.html';
-            }
         }
     </script>
 </body>

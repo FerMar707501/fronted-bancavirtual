@@ -4,7 +4,16 @@ let tiposCuenta = [];
 let agencias = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
-    cargarComponentes();
+    if (!verificarAutenticacion()) {
+        return;
+    }
+    
+    // Cargar nombre del usuario si existe
+    const usuario = obtenerUsuarioActual();
+    if (usuario && document.getElementById('adminName')) {
+        document.getElementById('adminName').textContent = usuario.nombre_completo || usuario.username;
+    }
+    
     await cargarDatosIniciales();
     configurarEventos();
 });

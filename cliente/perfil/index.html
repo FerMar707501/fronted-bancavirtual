@@ -33,7 +33,7 @@
                 </ul>
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="cerrarSesion()">
+                        <a class="nav-link" href="#" onclick="event.preventDefault(); confirmarCerrarSesion();">
                             <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
                         </a>
                     </li>
@@ -147,6 +147,7 @@
     <script src="../../shared/js/api.js"></script>
     <script src="../../shared/js/auth.js"></script>
     <script src="../../shared/js/utils.js"></script>
+    <script src="../js/logout.js"></script>
     <script>
         let usuario = null;
 
@@ -186,7 +187,7 @@
 
         async function cargarCuentas() {
             try {
-                const response = await apiCall('/cuentas/mis-cuentas', { method: 'GET' });
+                const response = await apiCall('/cuentas/mis-cuentas', 'GET');
                 
                 if (response.cuentas && response.cuentas.length > 0) {
                     const html = response.cuentas.map(cuenta => `
@@ -264,13 +265,6 @@
             } finally {
                 btnCambiar.disabled = false;
                 btnCambiar.innerHTML = '<i class="bi bi-key"></i> Cambiar Contraseña';
-            }
-        }
-
-        function cerrarSesion() {
-            if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
-                logout();
-                window.location.href = '../../index.html';
             }
         }
 

@@ -1,0 +1,7 @@
+/**
+ * Estilos principales del sistema
+ * Importa todos los estilos globales y componentes
+ */
+
+@import url('./global.css');
+@import url('./components.css');

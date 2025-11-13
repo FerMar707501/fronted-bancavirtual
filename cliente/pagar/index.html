@@ -33,7 +33,7 @@
                 </ul>
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="cerrarSesion()">
+                        <a class="nav-link" href="#" onclick="event.preventDefault(); confirmarCerrarSesion();">
                             <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
                         </a>
                     </li>
@@ -191,6 +191,7 @@
     <script src="../../shared/js/api.js"></script>
     <script src="../../shared/js/auth.js"></script>
     <script src="../../shared/js/utils.js"></script>
+    <script src="../js/logout.js"></script>
     <script>
         let prestamos = [];
         let prestamoSeleccionado = null;
@@ -211,7 +212,7 @@
 
         async function cargarCuenta() {
             try {
-                const response = await apiCall('/cuentas/mis-cuentas', { method: 'GET' });
+                const response = await apiCall('/cuentas/mis-cuentas', 'GET');
                 
                 if (response.cuentas && response.cuentas.length > 0) {
                     cuentaCliente = response.cuentas.find(c => c.estado === 'activa') || response.cuentas[0];
@@ -231,7 +232,7 @@
 
         async function cargarPrestamos() {
             try {
-                const response = await apiCall('/prestamos/mis-prestamos', { method: 'GET' });
+                const response = await apiCall('/prestamos/mis-prestamos', 'GET');
                 
                 prestamos = response.prestamos?.filter(p => p.estado === 'activo') || [];
                 
@@ -386,13 +387,6 @@
             } finally {
                 btnPagar.disabled = false;
                 btnPagar.innerHTML = '<i class="bi bi-check-circle"></i> Confirmar Pago';
-            }
-        }
-
-        function cerrarSesion() {
-            if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
-                logout();
-                window.location.href = '../../index.html';
             }
         }
 

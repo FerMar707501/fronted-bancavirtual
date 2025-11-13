@@ -33,7 +33,7 @@
                 </ul>
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="cerrarSesion()">
+                        <a class="nav-link" href="#" onclick="event.preventDefault(); confirmarCerrarSesion();">
                             <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
                         </a>
                     </li>
@@ -120,6 +120,7 @@
     <script src="../../shared/js/api.js"></script>
     <script src="../../shared/js/auth.js"></script>
     <script src="../../shared/js/utils.js"></script>
+    <script src="../js/logout.js"></script>
     <script>
         let cuentaCliente = null;
         const modalConfirmacion = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
@@ -137,7 +138,7 @@
 
         async function cargarCuenta() {
             try {
-                const response = await apiCall('/cuentas/mis-cuentas', { method: 'GET' });
+                const response = await apiCall('/cuentas/mis-cuentas', 'GET');
                 
                 if (response.cuentas && response.cuentas.length > 0) {
                     cuentaCliente = response.cuentas.find(c => c.estado === 'activa') || response.cuentas[0];
@@ -173,13 +174,10 @@
             btnDepositar.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Procesando...';
 
             try {
-                const response = await apiCall('/transacciones/deposito', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        id_cuenta_destino: cuentaCliente.id_cuenta,
-                        monto: monto,
-                        descripcion: descripcion
-                    })
+                const response = await apiCall('/transacciones/deposito', 'POST', {
+                    id_cuenta: cuentaCliente.id_cuenta,
+                    monto: monto,
+                    descripcion: descripcion
                 });
 
                 // Actualizar saldo
@@ -200,13 +198,6 @@
             } finally {
                 btnDepositar.disabled = false;
                 btnDepositar.innerHTML = '<i class="bi bi-check-circle"></i> Realizar Depósito';
-            }
-        }
-
-        function cerrarSesion() {
-            if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
-                logout();
-                window.location.href = '../../index.html';
             }
         }
 

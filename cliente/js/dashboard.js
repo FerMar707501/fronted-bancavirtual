@@ -3,16 +3,14 @@ let cuentaCliente = null;
 let usuarioActual = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Verificar autenticación
-    if (!verificarAutenticacion()) {
-        window.location.href = '../index.html';
+    // Verificar autenticación y rol de cliente
+    if (!verificarAutenticacion('cliente')) {
         return;
     }
 
-    // Verificar que sea cliente
+    // Obtener usuario actual
     usuarioActual = obtenerUsuarioActual();
-    if (!usuarioActual || usuarioActual.rol?.codigo !== 'CLIENTE') {
-        alert('Acceso no autorizado');
+    if (!usuarioActual) {
         window.location.href = '../index.html';
         return;
     }
@@ -33,11 +31,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function cargarCuentaCliente() {
     try {
         // Obtener las cuentas del cliente
-        const response = await apiCall('/cuentas/mis-cuentas', {
-            method: 'GET'
-        });
+        const response = await apiCall('/cuentas/mis-cuentas', 'GET');
 
-        if (response.cuentas && response.cuentas.length > 0) {
+        if (response && response.cuentas && response.cuentas.length > 0) {
             // Tomar la primera cuenta activa
             cuentaCliente = response.cuentas.find(c => c.estado === 'activa') || response.cuentas[0];
             
@@ -50,21 +46,27 @@ async function cargarCuentaCliente() {
             estadoBadge.textContent = capitalizar(cuentaCliente.estado);
             estadoBadge.className = `badge ${cuentaCliente.estado === 'activa' ? 'bg-success' : 'bg-warning'}`;
         } else {
+            // Si no hay cuentas, mostrar mensaje pero no bloquear la app
+            document.getElementById('numeroCuenta').textContent = 'Sin cuenta asignada';
+            document.getElementById('tipoCuenta').textContent = 'N/A';
+            document.getElementById('saldoDisponible').textContent = 'Q 0.00';
+            const estadoBadge = document.getElementById('estadoCuenta');
+            estadoBadge.textContent = 'Sin cuenta';
+            estadoBadge.className = 'badge bg-warning';
             mostrarAlerta('No tienes cuentas registradas. Contacta al administrador.', 'warning');
         }
     } catch (error) {
         console.error('Error al cargar cuenta:', error);
-        mostrarAlerta('Error al cargar la información de la cuenta', 'danger');
+        // No mostrar alerta si es un error de red normal, solo en consola
+        // mostrarAlerta('Error al cargar la información de la cuenta', 'danger');
     }
 }
 
 async function cargarPrestamos() {
     try {
-        const response = await apiCall('/prestamos/mis-prestamos', {
-            method: 'GET'
-        });
+        const response = await apiCall('/prestamos', 'GET');
 
-        if (response.prestamos && response.prestamos.length > 0) {
+        if (response && response.prestamos && response.prestamos.length > 0) {
             document.getElementById('seccionPrestamos').style.display = 'block';
             
             const prestamosActivos = response.prestamos.filter(p => p.estado === 'activo');
@@ -112,6 +114,7 @@ async function cargarPrestamos() {
         }
     } catch (error) {
         console.error('Error al cargar préstamos:', error);
+        // No mostrar la sección si hay error
         document.getElementById('seccionPrestamos').style.display = 'none';
     }
 }
@@ -125,9 +128,7 @@ async function cargarUltimosMovimientos() {
             return;
         }
 
-        const response = await apiCall(`/transacciones/cuenta/${cuentaCliente.id_cuenta}?limite=5`, {
-            method: 'GET'
-        });
+        const response = await apiCall(`/transacciones/cuenta/${cuentaCliente.id_cuenta}?limite=5`, 'GET');
 
         const tbody = document.getElementById('tablaMovimientos');
         
@@ -156,13 +157,6 @@ async function cargarUltimosMovimientos() {
         document.getElementById('tablaMovimientos').innerHTML = `
             <tr><td colspan="4" class="text-center text-danger">Error al cargar movimientos</td></tr>
         `;
-    }
-}
-
-function cerrarSesion() {
-    if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
-        logout();
-        window.location.href = '../index.html';
     }
 }
 

@@ -5,13 +5,14 @@
 /**
  * Formatear moneda
  * @param {number} amount - Cantidad a formatear
- * @returns {string} - Cantidad formateada (ej: $1,234.56)
+ * @returns {string} - Cantidad formateada (ej: Q1,234.56)
  */
 function formatearMoneda(amount) {
-    return new Intl.NumberFormat('es-MX', {
-        style: 'currency',
-        currency: 'MXN'
+    const formatted = new Intl.NumberFormat('es-GT', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
     }).format(amount);
+    return 'Q ' + formatted;
 }
 
 /**
@@ -223,4 +224,97 @@ function formatDateTime(date) {
         minute: '2-digit',
         second: '2-digit'
     });
+}
+
+/**
+ * Alias de formatNumber para formatear dinero
+ * @param {number|string} amount - Cantidad a formatear
+ * @returns {string}
+ */
+function formatMoney(amount) {
+    return formatNumber(amount);
+}
+
+/**
+ * Formatear solo fecha (sin hora)
+ * @param {string|Date} date - Fecha a formatear
+ * @returns {string}
+ */
+function formatDate(date) {
+    if (!date) return '';
+    const d = new Date(date);
+    return d.toLocaleDateString('es-GT', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    });
+}
+
+/**
+ * Mostrar loading (spinner)
+ */
+function showLoading() {
+    const spinner = document.getElementById('globalSpinner');
+    if (spinner) {
+        spinner.style.display = 'flex';
+    }
+}
+
+/**
+ * Ocultar loading
+ */
+function hideLoading() {
+    const spinner = document.getElementById('globalSpinner');
+    if (spinner) {
+        spinner.style.display = 'none';
+    }
+}
+
+/**
+ * Mostrar alerta con Bootstrap
+ * @param {string} message - Mensaje a mostrar
+ * @param {string} type - Tipo de alerta (success, danger, warning, info)
+ */
+function showAlert(message, type = 'info') {
+    // Crear el contenedor de alertas si no existe
+    let alertContainer = document.getElementById('alertContainer');
+    if (!alertContainer) {
+        alertContainer = document.createElement('div');
+        alertContainer.id = 'alertContainer';
+        alertContainer.style.position = 'fixed';
+        alertContainer.style.top = '70px';
+        alertContainer.style.right = '20px';
+        alertContainer.style.zIndex = '9999';
+        alertContainer.style.maxWidth = '400px';
+        document.body.appendChild(alertContainer);
+    }
+
+    const alertId = 'alert-' + Date.now();
+    const alertHtml = `
+        <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    alertContainer.insertAdjacentHTML('beforeend', alertHtml);
+    
+    // Auto-cerrar después de 5 segundos
+    setTimeout(() => {
+        const alertElement = document.getElementById(alertId);
+        if (alertElement) {
+            alertElement.remove();
+        }
+    }, 5000);
+}
+
+/**
+ * Cargar nombre del usuario en el navbar
+ */
+function cargarNombreUsuario() {
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+    const nombreElement = document.getElementById('adminName') || document.getElementById('clientName');
+    if (nombreElement && usuario.nombre_completo) {
+        nombreElement.textContent = usuario.nombre_completo;
+    }
 }
